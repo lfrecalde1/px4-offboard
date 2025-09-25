@@ -68,11 +68,11 @@ def generate_launch_description():
             ],
             output='screen'
         ),
-        Node(
-        namespace=namespace,
-        name="px4_odom_transform_node",
-        remappings=[('odom', 'odom')],
-        package='px4_odom_transform',
-        executable='px4_odom_transform_node',
-    )
+        #Node(
+        #namespace=namespace,
+        #name="px4_odom_transform_node",
+        #remappings=[('odom', 'odom')],
+        #package='px4_odom_transform',
+        #executable='px4_odom_transform_node',
+    #)
     ])

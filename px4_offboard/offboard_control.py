@@ -80,7 +80,7 @@ class OffboardControl(Node):
         self.publisher_offboard_mode = self.create_publisher(OffboardControlMode, 'fmu/in/offboard_control_mode', qos_profile_pub)
         self.publisher_trajectory = self.create_publisher(VehicleRatesSetpoint, 'fmu/in/vehicle_rates_setpoint', qos_profile_pub)
         self.publisher_acceleration = self.create_publisher(TrajectorySetpoint, 'fmu/in/trajectory_setpoint', qos_profile_pub)
-        self.publisher_attitude = self.create_publisher(VehicleAttitudeSetpoint, 'fmu/in/vehicle_attitude_setpoint_v1', qos_profile_pub)
+        self.publisher_attitude = self.create_publisher(VehicleAttitudeSetpoint, 'fmu/in/vehicle_attitude_setpoint', qos_profile_pub)
         timer_period = 0.02  # seconds
         self.timer = self.create_timer(timer_period, self.cmdloop_callback)
         self.dt = timer_period
@@ -92,7 +92,7 @@ class OffboardControl(Node):
         self.km = 1
         self.lin_cof_a = 1.0
         self.lin_int_b = -0.35
-        self.mass = 2.06
+        self.mass = 2.05
 
         self.nav_state = VehicleStatus.NAVIGATION_STATE_MAX
         #self.arming_state = VehicleStatus.ARMING_STATE_DISARMED
@@ -148,28 +148,27 @@ class OffboardControl(Node):
         ## --- 3. Compute throttle ---
 
         ##thrust = (4.686*9.81)
-        thrust = np.sqrt((3.2*9.81)/4)
+        thrust = np.sqrt(((self.mass+0.5)*9.81)/4)
 
         ## --- 4. Scale and clamp throttle ---
         ## self.lin_cof_a, self.lin_int_b are linear fit parameters
         #
         throttle = self.force_to_throttle_linear(thrust)
-        #self.get_logger().info(f"Throttle: {throttle:.3f}")
+        self.get_logger().info(f"Throttle: {throttle:.3f}")
         ##throttle = np.clip(throttle, 0.0, 1.0)
 
         thrust_body = [0.0, 0.0, throttle] 
         qd = [1.0, 0.0, 0.0, 0.0]
 
         ## --- 5. Create and publish VehicleRatesSetpoint ---
-        rates_msg = VehicleRatesSetpoint()
-        now = self.get_clock().now()
-        rates_msg.timestamp = int(now.nanoseconds / 1000)  # microseconds
-        rates_msg.roll = float(ang_vel_ned[0])
-        rates_msg.pitch = float(ang_vel_ned[1])
-        rates_msg.yaw = float(0.1)
-        rates_msg.thrust_body = thrust_body
-
-        self.publisher_trajectory.publish(rates_msg)
+        #rates_msg = VehicleRatesSetpoint()
+        #now = self.get_clock().now()
+        #rates_msg.timestamp = int(now.nanoseconds / 1000)  # microseconds
+        #rates_msg.roll = float(ang_vel_ned[0])
+        #rates_msg.pitch = float(ang_vel_ned[1])
+        #rates_msg.yaw = float(0.1)
+        #rates_msg.thrust_body = thrust_body
+        #self.publisher_trajectory.publish(rates_msg)
 
         
         ## Acceleration set point
@@ -185,12 +184,12 @@ class OffboardControl(Node):
         #self.publisher_acceleration.publish(trajectory_msg)
 
         
-        #attitude_msg = VehicleAttitudeSetpoint()
-        #now = self.get_clock().now()
-        #attitude_msg.timestamp = int(now.nanoseconds / 1000)  # microseconds
-        #attitude_msg.thrust_body = thrust_body
+        attitude_msg = VehicleAttitudeSetpoint()
+        now = self.get_clock().now()
+        attitude_msg.timestamp = int(now.nanoseconds / 1000)  # microseconds
+        attitude_msg.thrust_body = thrust_body
         #attitude_msg.q_d = qd
-        #self.publisher_attitude.publish(attitude_msg)
+        self.publisher_attitude.publish(attitude_msg)
 
 
         
